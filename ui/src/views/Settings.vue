@@ -61,20 +61,6 @@
                 $t("settings.enabled")
               }}</template>
             </cv-toggle>
-                        <cv-toggle
-              value="docker_enable_security"
-              :label="$t('settings.enable_security')"
-              v-model="isSecurityEnabled"
-              :disabled="loading.getConfiguration || loading.configureModule"
-              class="mg-bottom"
-            >
-              <template slot="text-left">{{
-                $t("settings.disabled")
-              }}</template>
-              <template slot="text-right">{{
-                $t("settings.enabled")
-              }}</template>
-            </cv-toggle>
               <!-- advanced options -->
             <cv-accordion ref="accordion" class="maxwidth mg-bottom">
               <cv-accordion-item :open="toggleAccordion[0]">
@@ -138,7 +124,6 @@ export default {
       urlCheckInterval: null,
       host: "",
       isLetsEncryptEnabled: false,
-      isLetsSecurityEnabled: false,
       isHttpToHttpsEnabled: true,
       loading: {
         getConfiguration: false,
@@ -216,7 +201,6 @@ export default {
       const config = taskResult.output;
       this.host = config.host;
       this.isLetsEncryptEnabled = config.lets_encrypt;
-      this.isSecurityEnabled = config.docker_enable_security;
       this.isHttpToHttpsEnabled = config.http2https;
 
       this.loading.getConfiguration = false;
@@ -286,7 +270,6 @@ export default {
           data: {
             host: this.host,
             lets_encrypt: this.isLetsEncryptEnabled,
-            docker_enable_security: this.isSecurityEnabled,
             http2https: this.isHttpToHttpsEnabled,
           },
           extra: {
