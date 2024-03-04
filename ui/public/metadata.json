@@ -1,19 +1,19 @@
 {
-  "name": "kickstart",
+  "name": "ntfy",
   "description": {
-    "en": "My kickstart module"
+    "en": "Your locally hosted one-stop-shop for all your PDF needs.."
   },
-  "categories": [],
+  "categories": ["communication"],
   "authors": [
     {
-      "name": "Name Surname",
-      "email": "author@yourmail.org"
+      "name": "Martin Bhuong",
+      "email": "martin@genius.ke"
     }
   ],
   "docs": {
-    "documentation_url": "https://docs.kickstart.com/",
-    "bug_url": "https://github.com/NethServer/dev",
-    "code_url": "https://github.com/author/ns8-kickstart"
+    "documentation_url": "https://docs.ntfy.sh/",
+    "bug_url": "https://github.com/geniusdynamics/ns8-ntfy/issues",
+    "code_url": "https://github.com/geniusdynamics/ns8-ntfy"
   },
-  "source": "ghcr.io/nethserver/kickstart"
+  "source": "ghcr.io/geniusdynamics/stirlingpdf"
 }
