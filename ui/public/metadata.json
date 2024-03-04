@@ -15,5 +15,5 @@
     "bug_url": "https://github.com/geniusdynamics/ns8-ntfy/issues",
     "code_url": "https://github.com/geniusdynamics/ns8-ntfy"
   },
-  "source": "ghcr.io/geniusdynamics/stirlingpdf"
+  "source": "ghcr.io/geniusdynamics/ntfy"
 }
