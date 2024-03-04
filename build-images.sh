@@ -14,7 +14,7 @@ images=()
 repobase="${REPOBASE:-ghcr.io/geniusdynamics}"
 # Configure the image name
 reponame="ntfy"
-NTFY_TAG="2.8.0"
+NTFY_TAG="v2.8.0"
 # Create a new empty container image
 container=$(buildah from scratch)
 
