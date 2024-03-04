@@ -1,44 +1,18 @@
 # ns8-ntfy
 
-This is a template module for [NethServer 8](https://github.com/NethServer/ns8-core).
-To start a new module from it:
+THis is a NEthserver 8 App for NTFY(notify) [NTFY](https://github.com/binwiederhier/ntfy) 
 
-1. Click on [Use this template](https://github.com/NethServer/ns8-ntfy/generate).
-   Name your repo with `ns8-` prefix (e.g. `ns8-mymodule`). 
-   Do not end your module name with a number, like ~~`ns8-baaad2`~~!
-
-1. Clone the repository, enter the cloned directory and
-   [configure your GIT identity](https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup#_your_identity)
-
-1. Rename some references inside the repo:
-   ```
-   modulename=$(basename $(pwd) | sed 's/^ns8-//') &&
-   git mv imageroot/systemd/user/ntfy.service imageroot/systemd/user/${modulename}.service &&
-   git mv imageroot/systemd/user/ntfy-app.service imageroot/systemd/user/${modulename}-app.service && 
-   git mv tests/ntfy.robot tests/${modulename}.robot &&
-   sed -i "s/ntfy/${modulename}/g" $(find .github/ * -type f) &&
-   git commit -a -m "Repository initialization"
-   ```
-
-1. Edit this `README.md` file, by replacing this section with your module
-   description
-
-1. Adjust `.github/workflows` to your needs. `clean-registry.yml` might
-   need the proper list of image names to work correctly. Unused workflows
-   can be disabled from the GitHub Actions interface.
-
-1. Commit and push your local changes
 
 ## Install
 
 Instantiate the module with:
 
-    add-module ghcr.io/nethserver/ntfy:latest 1
+    add-module ghcr.io/geniusdynamics/ntfy:latest 1
 
 The output of the command will return the instance name.
 Output example:
 
-    {"module_id": "ntfy1", "image_name": "ntfy", "image_url": "ghcr.io/nethserver/ntfy:latest"}
+    {"module_id": "ntfy1", "image_name": "ntfy", "image_url": "ghcr.io/geniusdynamics/ntfy:latest"}
 
 ## Configure
 
@@ -157,7 +131,7 @@ podman exec -ti   ntfy-app sh
 Test the module using the `test-module.sh` script:
 
 
-    ./test-module.sh <NODE_ADDR> ghcr.io/nethserver/ntfy:latest
+    ./test-module.sh <NODE_ADDR> ghcr.io/geniusdynamics/ntfy:latest
 
 The tests are made using [Robot Framework](https://robotframework.org/)
 
@@ -168,4 +142,4 @@ Translated with [Weblate](https://hosted.weblate.org/projects/ns8/).
 To setup the translation process:
 
 - add [GitHub Weblate app](https://docs.weblate.org/en/latest/admin/continuous.html#github-setup) to your repository
-- add your repository to [hosted.weblate.org]((https://hosted.weblate.org) or ask a NethServer developer to add it to ns8 Weblate project
+- add your repository to [hosted.weblate.org]((https://hosted.weblate.org) or ask a nethserver developer to add it to ns8 Weblate project
