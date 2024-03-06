@@ -23,8 +23,7 @@ ExecStart=/usr/bin/podman run --conmon-pidfile %t/ntfy-app.pid \
     --pod-id-file %t/ntfy.pod-id --replace -d --name  ntfy-app \
     --volume ntfy-cache:/var/cache/ntfy \
     --volume ntfy-app:/etc/ntfy \
-    ${NTFY_IMAGE}
-    %N serve
+    ${NTFY_IMAGE} podman exec ntfy-app serve
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/ntfy-app.ctr-id -t 10
 ExecReload=/usr/bin/podman kill -s HUP ntfy-app
 SyslogIdentifier=%u
