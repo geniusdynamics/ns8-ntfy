@@ -18,6 +18,7 @@ TimeoutStopSec=70
 ExecStartPre=/bin/mkdir -p config
 ExecStartPre=/bin/rm -f %t/ntfy-app.pid %t/ntfy-app.ctr-id
 ExecStartPre=-runagent discover-smarthost
+ExecStartPost=bash -c "while ! /usr/bin/podman exec ntfy-app serve; do sleep 1 ; done"
 ExecStart=/usr/bin/podman run --conmon-pidfile %t/ntfy-app.pid \
     --cidfile %t/ntfy-app.ctr-id --cgroups=no-conmon \
     --pod-id-file %t/ntfy.pod-id --replace -d --name  ntfy-app \
