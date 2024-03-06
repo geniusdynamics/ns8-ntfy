@@ -18,16 +18,15 @@ TimeoutStopSec=70
 ExecStartPre=/bin/mkdir -p config
 ExecStartPre=/bin/rm -f %t/ntfy-app.pid %t/ntfy-app.ctr-id
 ExecStartPre=-runagent discover-smarthost
-ExecStartPost=bash -c "while ! /usr/bin/podman exec ntfy-app serve; do sleep 1 ; done"
 ExecStart=/usr/bin/podman run --conmon-pidfile %t/ntfy-app.pid \
     --cidfile %t/ntfy-app.ctr-id --cgroups=no-conmon \
     --pod-id-file %t/ntfy.pod-id --replace -d --name  ntfy-app \
     --volume ntfy-cache:/var/cache/ntfy \
     --volume ntfy-app:/etc/ntfy \
     ${NTFY_IMAGE}
+    %N serve
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/ntfy-app.ctr-id -t 10
 ExecReload=/usr/bin/podman kill -s HUP ntfy-app
-ExecReload=bash -c "while ! /usr/bin/podman exec ntfy-app serve; do sleep 1 ; done"
 SyslogIdentifier=%u
 ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/ntfy-app.ctr-id
 PIDFile=%t/ntfy-app.pid
