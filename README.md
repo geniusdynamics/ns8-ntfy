@@ -22,8 +22,22 @@ Launch `configure-module`, by setting the following parameters:
 - `host`: a fully qualified domain name for the application
 - `http2https`: enable or disable HTTP to HTTPS redirection (true/false)
 - `lets_encrypt`: enable or disable Let's Encrypt certificate (true/false)
+- `NTFY_BASE_URL`: Public facing base URL of the service (e.g. https://ntfy.domain.sh)
+- `NTFY_AUTH_DEFAULT_ACCESSt`: Default permissions if no matching entries in the auth database are found. Default is read-write. read-write, read-only, write-only, deny-all
+- `NTFY_BEHIND_PROXY`: enable or disable default true (true/false)
+- `NTFY_ENABLE_LOGIN`: enable or disable default false (true/false)
+- `NTFY_ENABLE_SIGNUP`: enable or disable default false (true/false)
+- `NTFY_UPSTREAM_BASE_URL`: Forward poll request to an upstream server, this is needed for iOS push notifications for self-hosted servers https://ntfy.sh
+- `NTFY_UPSTREAM_ACCESS_TOKEN`: Access token to use for the upstream server; needed only if upstream rate limits are exceeded or upstream server requires auth
+- `NTFY_WEB_PUSH_EMAIL_ADDRESS`: Web Push: Sender email address
+- `NTFY_CACHE_FILE`: If set, messages are cached in a local SQLite database instead of only in-memory. This allows for service restarts without losing messages in support of the since= parameter
+- `NTFY_ATTACHMENT_CACHE_DIR`: enable or disable Let's Encrypt certificate (true/false)
+- `NTFY_AUTH_FILE`: Auth database file used for access control. If set, enables authentication and access control. See access control.
+- `NTFY_WEB_PUSH_FILE`: Web Push: Database file that stores subscriptions
+- `NTFY_WEB_PUSH_PUBLIC_KEY`: Web Push: Public Key. Run ntfy webpush keys to generate
+- `NTFY_WEB_PUSH_PRIVATE_KEY`: Web Push: Private Key. Run ntfy webpush keys to generate
 
-
+[More Variables](https://docs.ntfy.sh/config/#config-options)
 Example:
 
 ```
