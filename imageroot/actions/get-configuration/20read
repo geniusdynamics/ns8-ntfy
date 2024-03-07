@@ -21,6 +21,19 @@ config = {}
 config["host"] = os.getenv("TRAEFIK_HOST","")
 config["http2https"] = os.getenv("TRAEFIK_HTTP2HTTPS") == "True"
 config["lets_encrypt"] = os.getenv("TRAEFIK_LETS_ENCRYPT") == "True"
+config["host"] = os.getenv("TRAEFIK_HOST","")
+config["host"] = os.getenv("TRAEFIK_HOST","")
+config["host"] = os.getenv("TRAEFIK_HOST","")
+config["host"] = os.getenv("TRAEFIK_HOST","")
+config["host"] = os.getenv("TRAEFIK_HOST","")
+config["host"] = os.getenv("TRAEFIK_HOST","")
+config["host"] = os.getenv("TRAEFIK_HOST","")
+config["host"] = os.getenv("TRAEFIK_HOST","")
+config["host"] = os.getenv("TRAEFIK_HOST","")
+config["host"] = os.getenv("TRAEFIK_HOST","")
+config["host"] = os.getenv("TRAEFIK_HOST","")
+config["host"] = os.getenv("TRAEFIK_HOST","")
+config["host"] = os.getenv("TRAEFIK_HOST","")
 
 # Dump the configuration to stdout
 json.dump(config, fp=sys.stdout)
