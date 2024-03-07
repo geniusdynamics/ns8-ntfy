@@ -1,7 +1,9 @@
 # ns8-ntfy
 
 THis is a NEthserver 8 App for NTFY(notify) [NTFY](https://github.com/binwiederhier/ntfy) 
+https://ntfy.sh/
 
+ntfy (pronounced notify) is a simple HTTP-based pub-sub notification service. It allows you to send notifications to your phone or desktop via scripts from any computer, and/or using a REST API. It's infinitely flexible, and 100% free software.
 
 ## Install
 
