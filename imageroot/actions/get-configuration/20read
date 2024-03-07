@@ -24,7 +24,7 @@ config["lets_encrypt"] = os.getenv("TRAEFIK_LETS_ENCRYPT") == "True"
 config["base_url"] = os.getenv("NTFY_BASE_URL","")
 config["auth-default-access"] = os.getenv("NTFY_AUTH_DEFAULT_ACCESS","")
 config["behind-proxy"] = os.getenv("NTFY_BEHIND_PROXY","")
-config["enable-logint"] = os.getenv("NTFY_ENABLE_LOGIN") == "False"
+config["enable-login"] = os.getenv("NTFY_ENABLE_LOGIN") == "False"
 config["enable-signup"] = os.getenv("NTFY_ENABLE_SIGNUP") == "False"
 config["upstream-base-url"] = os.getenv("NTFY_UPSTREAM_BASE_URL","https://ntfy.sh")
 config["upstream-access-token"] = os.getenv("NTFY_UPSTREAM_ACCESS_TOKEN","")
