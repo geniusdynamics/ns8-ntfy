@@ -46,7 +46,22 @@ You can retrieve the configuration with
 ```
 api-cli run get-configuration --agent module/ntfy1
 ```
+## Web Push Private and Public key Pairs
+- enter into the container
 
+`ssh ntfy1@localhost`
+
+- run the command inside the container 
+ `podman exec ntfy-app  ntfy webpush keys`
+ ```
+Web Push keys generated. Add the following lines to your config file:
+
+web-push-public-key: BIoV3b7JhU0y-4CeP32PmFcVTQB5_rAfC99S8684FI72pC50GvICMwmTn1TLcqqbiREcYLmgQVMvTRDS75Bpg_E
+web-push-private-key: BrOm7ZuMouXzV8lT8xoC2wCSa7wscaZ9_JN3oKQama8
+web-push-file: /var/cache/ntfy/webpush.db # or similar
+web-push-email-address: <email address>
+
+```
 ## Uninstall
 
 To uninstall the instance:
