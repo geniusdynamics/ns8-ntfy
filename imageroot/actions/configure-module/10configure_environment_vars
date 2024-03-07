@@ -15,9 +15,9 @@ data = json.load(sys.stdin)
 
 # NTFY CSRF settings
 host = data.get("host", "")
-base-url = "https://"+host
+base_url = "https://"+host
 
-agent.set_env("NTFY_BASE_URL", data.get("base-url",""))
+agent.set_env("NTFY_BASE_URL", data.get("base_url",""))
 agent.set_env("NTFY_AUTH_DEFAULT_ACCESS", data.get("auth-default-access",""))
 agent.set_env("NTFY_BEHIND_PROXY",data.get("behind-proxy"))
 agent.set_env("NTFY_ENABLE_LOGIN", data.get("enable-login"))

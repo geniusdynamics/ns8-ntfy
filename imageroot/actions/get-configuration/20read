@@ -21,7 +21,7 @@ config = {}
 config["host"] = os.getenv("TRAEFIK_HOST","")
 config["http2https"] = os.getenv("TRAEFIK_HTTP2HTTPS") == "True"
 config["lets_encrypt"] = os.getenv("TRAEFIK_LETS_ENCRYPT") == "True"
-config["base-url"] = os.getenv("NTFY_BASE_URL","")
+config["base_url"] = os.getenv("NTFY_BASE_URL","")
 config["auth-default-access"] = os.getenv("NTFY_AUTH_DEFAULT_ACCESS","")
 config["behind-proxy"] = os.getenv("NTFY_BEHIND_PROXY","")
 config["enable-logint"] = os.getenv("NTFY_ENABLE_LOGIN") == "False"
