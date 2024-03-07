@@ -21,19 +21,20 @@ config = {}
 config["host"] = os.getenv("TRAEFIK_HOST","")
 config["http2https"] = os.getenv("TRAEFIK_HTTP2HTTPS") == "True"
 config["lets_encrypt"] = os.getenv("TRAEFIK_LETS_ENCRYPT") == "True"
-config["host"] = os.getenv("TRAEFIK_HOST","")
-config["host"] = os.getenv("TRAEFIK_HOST","")
-config["host"] = os.getenv("TRAEFIK_HOST","")
-config["host"] = os.getenv("TRAEFIK_HOST","")
-config["host"] = os.getenv("TRAEFIK_HOST","")
-config["host"] = os.getenv("TRAEFIK_HOST","")
-config["host"] = os.getenv("TRAEFIK_HOST","")
-config["host"] = os.getenv("TRAEFIK_HOST","")
-config["host"] = os.getenv("TRAEFIK_HOST","")
-config["host"] = os.getenv("TRAEFIK_HOST","")
-config["host"] = os.getenv("TRAEFIK_HOST","")
-config["host"] = os.getenv("TRAEFIK_HOST","")
-config["host"] = os.getenv("TRAEFIK_HOST","")
+config["base-url"] = os.getenv("NTFY_BASE_URL","")
+config["auth-default-access"] = os.getenv("NTFY_AUTH_DEFAULT_ACCESS","")
+config["behind-proxy"] = os.getenv("NTFY_BEHIND_PROXY","")
+config["enable-logint"] = os.getenv("NTFY_ENABLE_LOGIN") == "False"
+config["enable-signup"] = os.getenv("NTFY_ENABLE_SIGNUP") == "False"
+config["upstream-base-url"] = os.getenv("NTFY_UPSTREAM_BASE_URL","https://ntfy.sh")
+config["upstream-access-token"] = os.getenv("NTFY_UPSTREAM_ACCESS_TOKEN","")
+config["web-push-email-address"] = os.getenv("NTFY_WEB_PUSH_EMAIL_ADDRESS","")
+config["cache-file"] = os.getenv("NTFY_CACHE_FILE","/var/lib/ntfy/cache.db")
+config["attachment-cache-dir"] = os.getenv("NTFY_ATTACHMENT_CACHE_DIR","/var/lib/ntfy/attachments")
+config["auth-file"] = os.getenv("NTFY_AUTH_FILE","/var/lib/ntfy/auth.db")
+config["web-push-file"] = os.getenv("NTFY_WEB_PUSH_FILE","/var/lib/ntfy/webpush.db")
+config["web-push-public-key"] = os.getenv("NTFY_WEB_PUSH_PUBLIC_KEY","")
+config["web-push-private-key"] = os.getenv("NTFY_WEB_PUSH_PRIVATE_KEY","")
 
 # Dump the configuration to stdout
 json.dump(config, fp=sys.stdout)
