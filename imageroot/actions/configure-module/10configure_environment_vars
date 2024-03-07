@@ -13,19 +13,23 @@ import agent
 # If parsing fails, output everything to stderr
 data = json.load(sys.stdin)
 
-#This is specific to you module, so you need to change it accordingly.
-# we read a json stdin {"vars1":true, "var2":"foo", "vars3": 3} and we writ it to .config/state/environment
-# Upper case to set environment variable and minor case to read from stdin
+# NTFY CSRF settings
+host = data.get("host", "")
+base-url = "https://"+host
 
-# this values must exists in the json stdin
-# agent.set_env("MAIL_SERVER", data["mail_server"])
-# agent.set_env("LDAP_DOMAIN", data["ldap_domain"])
-
-# you can add default values for the following variables
-# agent.set_env("MAIL_DOMAIN",data.get("mail_domain",""))
-# agent.set_env("WOWORKERSCOUNT",data.get("workers_count",3))
-# agent.set_env("AUXILIARYACCOUNT",data.get("auxiliary_account",True))
-# agent.set_env("ACTIVESYNC",data.get("activesync",False))
+agent.set_env("NTFY_BASE_URL", data.get("base-url",""))
+agent.set_env("NTFY_AUTH_DEFAULT_ACCESS", data.get("auth-default-access",""))
+agent.set_env("NTFY_BEHIND_PROXY",data.get("behind-proxy"))
+agent.set_env("NTFY_ENABLE_LOGIN", data.get("enable-login"))
+agent.set_env("NTFY_ENABLE_SIGNUP", data.get("enable-signup"))
+agent.set_env("NTFY_UPSTREAM_BASE_URE", data.get("upstream-base-url"))
+agent.set_env("NTFY_UPSTREAM_ACCESS_TOKEN", data.get("upstream-access-token"))
+agent.set_env("NTFY_WEB_PUSH_EMAIL_ADDRESS",data.get("web-push-email-address"))
+agent.set_env("NTFY_CACHE_FILE",data.get("cache-file"))
+agent.set_env("NTFY_AUTH_FILE",data.get("auth-file"))
+agent.set_env("NTFY_WEB_PUSH_FILE",data.get("web-push-file"))
+agent.set_env("NTFY_WEB_PUSH_PUBLIC_KEY",data.get("web-push-public-key"))
+agent.set_env("NTFY_WEB_PUSH_PRIVATE_KEY",data.get("web-push-private-key"))
 
 
 # Make sure everything is saved inside the environment file
