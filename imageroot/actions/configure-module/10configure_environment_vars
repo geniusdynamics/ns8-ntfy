@@ -17,7 +17,7 @@ data = json.load(sys.stdin)
 host = data.get("host", "")
 base_url = "https://"+host
 
-agent.set_env("NTFY_BASE_URL", data.get("base_url",""))
+agent.set_env("NTFY_BASE_URL", data.get("NTFY_BASE_URL","base_url"))
 agent.set_env("NTFY_AUTH_DEFAULT_ACCESS", data.get("auth_default_access",""))
 agent.set_env("NTFY_BEHIND_PROXY",data.get("behind_proxy"))
 agent.set_env("NTFY_ENABLE_LOGIN", data.get("enable_login"))
