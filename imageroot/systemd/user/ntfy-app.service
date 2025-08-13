@@ -21,8 +21,14 @@ ExecStartPre=-runagent discover-smarthost
 ExecStart=/usr/bin/podman run --conmon-pidfile %t/ntfy-app.pid \
     --cidfile %t/ntfy-app.ctr-id --cgroups=no-conmon \
     --pod-id-file %t/ntfy.pod-id --replace -d --name  ntfy-app \
-    --volume ntfy-cache:/var/cache/ntfy \
-    --volume ntfy-app:/etc/ntfy \
+    --volume ./:/var/lib/ntfy \
+    --env=NTFY_* \
+    --env NTFY_SMTP_SENDER_ADDR=${SMTP_HOST} \
+    --env NTFY_SMTP_SERVER_LISTEN=${SMTP_PORT} \
+    --env NTFY_SMTP_SENDER_USER=${SMTP_USERNAME} \
+    --env NTFY_SMTP_SENDER_PASS=${SMTP_PASSWORD} \
+    --env NTFY_SMTP_SENDER_FROM=${SMTP_USERNAME} \
+    --env NTFY_SMTP_SERVER_DOMAIN=${SMTP_HOST} \
     ${NTFY_IMAGE} serve
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/ntfy-app.ctr-id -t 10
 ExecReload=/usr/bin/podman kill -s HUP ntfy-app

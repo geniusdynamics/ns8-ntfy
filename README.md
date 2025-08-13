@@ -1,7 +1,9 @@
 # ns8-ntfy
 
 THis is a NEthserver 8 App for NTFY(notify) [NTFY](https://github.com/binwiederhier/ntfy) 
+https://ntfy.sh/
 
+ntfy (pronounced notify) is a simple HTTP-based pub-sub notification service. It allows you to send notifications to your phone or desktop via scripts from any computer, and/or using a REST API. It's infinitely flexible, and 100% free software.
 
 ## Install
 
@@ -22,8 +24,22 @@ Launch `configure-module`, by setting the following parameters:
 - `host`: a fully qualified domain name for the application
 - `http2https`: enable or disable HTTP to HTTPS redirection (true/false)
 - `lets_encrypt`: enable or disable Let's Encrypt certificate (true/false)
+- `NTFY_BASE_URL`: Public facing base URL of the service (e.g. https://ntfy.domain.sh)
+- `NTFY_AUTH_DEFAULT_ACCESSt`: Default permissions if no matching entries in the auth database are found. Default is read-write. read-write, read-only, write-only, deny-all
+- `NTFY_BEHIND_PROXY`: enable or disable default true (true/false)
+- `NTFY_ENABLE_LOGIN`: enable or disable default false (true/false)
+- `NTFY_ENABLE_SIGNUP`: enable or disable default false (true/false)
+- `NTFY_UPSTREAM_BASE_URL`: Forward poll request to an upstream server, this is needed for iOS push notifications for self-hosted servers https://ntfy.sh
+- `NTFY_UPSTREAM_ACCESS_TOKEN`: Access token to use for the upstream server; needed only if upstream rate limits are exceeded or upstream server requires auth
+- `NTFY_WEB_PUSH_EMAIL_ADDRESS`: Web Push: Sender email address
+- `NTFY_CACHE_FILE`: If set, messages are cached in a local SQLite database instead of only in-memory. This allows for service restarts without losing messages in support of the since= parameter
+- `NTFY_ATTACHMENT_CACHE_DIR`: enable or disable Let's Encrypt certificate (true/false)
+- `NTFY_AUTH_FILE`: Auth database file used for access control. If set, enables authentication and access control. See access control.
+- `NTFY_WEB_PUSH_FILE`: Web Push: Database file that stores subscriptions
+- `NTFY_WEB_PUSH_PUBLIC_KEY`: Web Push: Public Key. Run ntfy webpush keys to generate
+- `NTFY_WEB_PUSH_PRIVATE_KEY`: Web Push: Private Key. Run ntfy webpush keys to generate
 
-
+[More Variables](https://docs.ntfy.sh/config/#config-options)
 Example:
 
 ```
@@ -46,7 +62,22 @@ You can retrieve the configuration with
 ```
 api-cli run get-configuration --agent module/ntfy1
 ```
+## Web Push Private and Public key Pairs
+- enter into the container
 
+`ssh ntfy1@localhost`
+
+- run the command inside the container 
+ `podman exec ntfy-app  ntfy webpush keys`
+ ```
+Web Push keys generated. Add the following lines to your config file:
+
+web-push-public-key: BIoV3b7JhU0y-4CeP32PmFcVTQB5_rAfC99S8684FI72pC50GvICMwmTn1TLcqqbiREcYLmgQVMvTRDS75Bpg_E
+web-push-private-key: BrOm7ZuMouXzV8lT8xoC2wCSa7wscaZ9_JN3oKQama8
+web-push-file: /var/cache/ntfy/webpush.db # or similar
+web-push-email-address: <email address>
+
+```
 ## Uninstall
 
 To uninstall the instance:
