@@ -33,10 +33,11 @@ agent.dump_env()
 # Find default traefik instance for current node
 default_traefik_id = agent.resolve_agent_id('traefik@node')
 if default_traefik_id is None:
+    print("Default Traefik instance of this node not found", file=sys.stderr)
     sys.exit(2)
 
 response = agent.tasks.run(
-    agent_id=agent.resolve_agent_id('traefik@node'),
+    agent_id=default_traefik_id,
     action='set-route',
     data={
         'instance': os.environ['MODULE_ID'],
@@ -48,4 +49,4 @@ response = agent.tasks.run(
 )
 
 # Check if traefik configuration has been successfull
-agent.assert_exp(response['exit_code'] == 0)
+agent.assert_exp(response['exit_code'] == 0, "Traefik set-route failed")

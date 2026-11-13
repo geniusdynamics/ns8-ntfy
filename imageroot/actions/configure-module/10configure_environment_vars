@@ -2,66 +2,54 @@
 
 #
 # Copyright (C) 2022 Nethesis S.r.l.
+# Copyright (C) 2026 Genius Dynamics
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
+#
+# Write the ntfy configuration: state/config/server.yml for the settings,
+# state/passwords.env (mode 0600) for the secrets. Secrets are never stored
+# with agent.set_env(): the module environment is copied to Redis, readable
+# by every module of the node.
+#
+
 import json
-import sys
-import agent
 import os
+import sys
 
+import agent
 
-def as_bool(value, default):
-    """ntfy parses booleans strictly: write true or false, never None"""
-    if value is None or value == "":
-        return default
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    return "true" if str(value).lower() in ("1", "true", "yes", "on") else "false"
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "pypkg"))
+import ntfy_config
 
-# Secrets are kept in state/passwords.env (mode 0600), never in the module
-# environment: agent.set_env() copies it to Redis, readable by every module
-# of the node.
-def write_secrets(values):
-    path = os.path.join(os.environ["AGENT_STATE_DIR"], "passwords.env")
-    try:
-        current = agent.read_envfile(path)
-    except FileNotFoundError:
-        current = {}
-    current.update({key: ("" if value is None else value) for key, value in values.items()})
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, "w") as fp:
-        for key in sorted(current):
-            fp.write(f"{key}={current[key]}\n")
-    for key in values:
-        agent.unset_env(key)
-
-# Try to parse the stdin as JSON.
-# If parsing fails, output everything to stderr
 data = json.load(sys.stdin)
-
-# NTFY CSRF settings
 host = data.get("host", "")
-base_url = "https://"+host
+old_host = os.environ.get("TRAEFIK_HOST", "")
 
-agent.set_env("NTFY_BASE_URL", data.get("base_url",""))
-agent.set_env("NTFY_AUTH_DEFAULT_ACCESS", data.get("auth_default_access",""))
-agent.set_env("NTFY_BEHIND_PROXY", as_bool(data.get("behind_proxy"), "true"))
-agent.set_env("NTFY_ENABLE_LOGIN", as_bool(data.get("enable_login"), "false"))
-agent.set_env("NTFY_ENABLE_SIGNUP", as_bool(data.get("enable_signup"), "false"))
-agent.set_env("NTFY_UPSTREAM_BASE_URE", data.get("upstream_base_url") or "")
-agent.set_env("NTFY_WEB_PUSH_EMAIL_ADDRESS", data.get("web_push_email_address") or "")
-agent.set_env("NTFY_CACHE_FILE", data.get("cache_file") or "")
-agent.set_env("NTFY_ATTACHMENT_CACHE_DIR", data.get("attachment_cache_dir") or "")
-agent.set_env("NTFY_AUTH_FILE", data.get("auth_file") or "")
-agent.set_env("NTFY_WEB_PUSH_FILE", data.get("web_push_file") or "")
-write_secrets({
-    "NTFY_UPSTREAM_ACCESS_TOKEN": data.get("upstream_access_token"),
-    "NTFY_WEB_PUSH_PUBLIC_KEY": data.get("web_push_public_key"),
-    "NTFY_WEB_PUSH_PRIVATE_KEY": data.get("web_push_private_key"),
-})
+# An instance that was not updated through update-module.d (it should not
+# happen) still keeps its NTFY_* settings.
+ntfy_config.migrate_legacy_environment(os.environ, old_host or host)
+ntfy_config.unset_legacy_environment(agent)
 
+previous = ntfy_config.read_server_config()
+server_config = data.get("server_config")
+if server_config is None:
+    if not os.path.exists(ntfy_config.CONFIG_PATH):
+        server_config = ntfy_config.default_config(host)
+    else:
+        server_config = ntfy_config.editable_config(previous)
+        # Follow a host change when base-url still points to the old host
+        parsed = ntfy_config.parse_config(server_config)
+        if old_host and host != old_host and parsed.get("base-url") == "https://" + old_host:
+            parsed["base-url"] = "https://" + host
+            server_config = ntfy_config.dump_config(parsed)
 
-# Make sure everything is saved inside the environment file
-# just before starting systemd unit
-#agent.dump_env()
+content = ntfy_config.merge_configuration(server_config, previous, data.get("ios_push"))
+content = ntfy_config.apply_legacy_options(content, data)
+ntfy_config.write_server_config(content)
+
+secrets = {key: data[name] for name, key in ntfy_config.SECRET_INPUTS.items() if name in data}
+if secrets or not os.path.exists(ntfy_config.secrets_path()):
+    ntfy_config.write_secrets(secrets)
+for key in ntfy_config.SECRET_INPUTS.values():
+    agent.unset_env(key)

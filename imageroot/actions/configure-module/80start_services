@@ -11,6 +11,16 @@ exec 1>&2
 
 # If the control reaches this step, the service can be enabled and started
 
-touch smarthost.env
+# Private environment files read by ntfy-app.service
+(umask 077 && touch smarthost.env passwords.env)
+chmod 600 smarthost.env passwords.env
 
-systemctl --user enable --now ntfy.service
+systemctl --user enable ntfy.service
+# A previous invalid configuration can have hit the start rate limit; clear
+# it before applying the new configuration.
+systemctl --user reset-failed ntfy.service ntfy-app.service || :
+if systemctl --user is-active --quiet ntfy.service; then
+    systemctl --user restart ntfy-app.service
+else
+    systemctl --user start ntfy.service
+fi

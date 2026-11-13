@@ -8,6 +8,13 @@
             "host": "ntfy.domain.org",
             "http2https": true,
             "lets_encrypt": true
+        },
+        {
+            "host": "ntfy.domain.org",
+            "http2https": true,
+            "lets_encrypt": true,
+            "server_config": "base-url: https://ntfy.domain.org\nauth-file: /var/lib/ntfy/auth.db\nauth-default-access: deny-all\n",
+            "ios_push": false
         }
     ],
     "type": "object",
@@ -32,6 +39,123 @@
             "type": "boolean",
             "title": "HTTP to HTTPS redirection",
             "description": "Redirect all the HTTP requests to HTTPS"
+        },
+        "server_config": {
+            "type": "string",
+            "title": "ntfy server.yml",
+            "description": "Editable YAML settings, excluding secrets and module-managed options. Omitted: keep the current settings.",
+            "maxLength": 1048576
+        },
+        "ios_push": {
+            "type": "boolean",
+            "description": "Forward poll requests to ntfy.sh (or the previous upstream) for iOS instant notifications. Omitted: keep the current state."
+        },
+        "upstream_access_token": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "maxLength": 1024,
+            "description": "Token for the upstream server, stored in passwords.env. Empty: remove it. Omitted: keep it.",
+            "pattern": "^[^\\r\\n]*$"
+        },
+        "web_push_public_key": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "maxLength": 1024,
+            "description": "Web Push public key, stored in passwords.env. Empty: remove it. Omitted: keep it.",
+            "pattern": "^[^\\r\\n]*$"
+        },
+        "web_push_private_key": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "maxLength": 1024,
+            "description": "Web Push private key, stored in passwords.env. Empty: remove it. Omitted: keep it.",
+            "pattern": "^[^\\r\\n]*$"
+        },
+        "base_url": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "description": "Deprecated, use server_config. Sets the server.yml option base-url; empty removes it, omitted keeps it."
+        },
+        "auth_default_access": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "description": "Deprecated, use server_config. Sets the server.yml option auth-default-access; empty removes it, omitted keeps it."
+        },
+        "enable_login": {
+            "type": [
+                "boolean",
+                "string",
+                "null"
+            ],
+            "description": "Deprecated, use server_config. Sets the server.yml option enable-login; empty removes it, omitted keeps it."
+        },
+        "enable_signup": {
+            "type": [
+                "boolean",
+                "string",
+                "null"
+            ],
+            "description": "Deprecated, use server_config. Sets the server.yml option enable-signup; empty removes it, omitted keeps it."
+        },
+        "upstream_base_url": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "description": "Deprecated, use server_config. Sets the server.yml option upstream-base-url; empty removes it, omitted keeps it."
+        },
+        "web_push_email_address": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "description": "Deprecated, use server_config. Sets the server.yml option web-push-email-address; empty removes it, omitted keeps it."
+        },
+        "cache_file": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "description": "Deprecated, use server_config. Sets the server.yml option cache-file; empty removes it, omitted keeps it."
+        },
+        "attachment_cache_dir": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "description": "Deprecated, use server_config. Sets the server.yml option attachment-cache-dir; empty removes it, omitted keeps it."
+        },
+        "auth_file": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "description": "Deprecated, use server_config. Sets the server.yml option auth-file; empty removes it, omitted keeps it."
+        },
+        "web_push_file": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "description": "Deprecated, use server_config. Sets the server.yml option web-push-file; empty removes it, omitted keeps it."
+        },
+        "behind_proxy": {
+            "type": [
+                "boolean",
+                "string",
+                "null"
+            ],
+            "description": "Deprecated and ignored: ntfy always runs behind the NS8 Traefik proxy."
         }
     }
 }
