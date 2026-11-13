@@ -29,9 +29,9 @@ config["http2https"] = os.getenv("TRAEFIK_HTTP2HTTPS") == "True"
 config["lets_encrypt"] = os.getenv("TRAEFIK_LETS_ENCRYPT") == "True"
 config["base_url"] = os.getenv("NTFY_BASE_URL","")
 config["auth_default_access"] = os.getenv("NTFY_AUTH_DEFAULT_ACCESS","read-write")
-config["behind_proxy"] = os.getenv("NTFY_BEHIND_PROXY") == "True"
-config["enable_login"] = os.getenv("NTFY_ENABLE_LOGIN") == "False"
-config["enable_signup"] = os.getenv("NTFY_ENABLE_SIGNUP") == "False"
+config["behind_proxy"] = os.getenv("NTFY_BEHIND_PROXY", "true").lower() == "true"
+config["enable_login"] = os.getenv("NTFY_ENABLE_LOGIN", "false").lower() == "true"
+config["enable_signup"] = os.getenv("NTFY_ENABLE_SIGNUP", "false").lower() == "true"
 config["upstream_base_url"] = os.getenv("NTFY_UPSTREAM_BASE_URL","https://ntfy.sh")
 config["upstream_access_token"] = secrets_env.get("NTFY_UPSTREAM_ACCESS_TOKEN", "")
 config["web_push_email_address"] = os.getenv("NTFY_WEB_PUSH_EMAIL_ADDRESS","")
