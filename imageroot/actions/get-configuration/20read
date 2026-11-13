@@ -17,6 +17,12 @@ import agent
 # Prepare return variable
 config = {}
 
+# Secrets are in passwords.env (see configure-module)
+try:
+    secrets_env = agent.read_envfile("passwords.env")
+except FileNotFoundError:
+    secrets_env = {}
+
 # Read current configuration from the environment file
 config["host"] = os.getenv("TRAEFIK_HOST","")
 config["http2https"] = os.getenv("TRAEFIK_HTTP2HTTPS") == "True"
@@ -27,14 +33,14 @@ config["behind_proxy"] = os.getenv("NTFY_BEHIND_PROXY") == "True"
 config["enable_login"] = os.getenv("NTFY_ENABLE_LOGIN") == "False"
 config["enable_signup"] = os.getenv("NTFY_ENABLE_SIGNUP") == "False"
 config["upstream_base_url"] = os.getenv("NTFY_UPSTREAM_BASE_URL","https://ntfy.sh")
-config["upstream_access_token"] = os.getenv("NTFY_UPSTREAM_ACCESS_TOKEN","")
+config["upstream_access_token"] = secrets_env.get("NTFY_UPSTREAM_ACCESS_TOKEN", "")
 config["web_push_email_address"] = os.getenv("NTFY_WEB_PUSH_EMAIL_ADDRESS","")
 config["cache_file"] = os.getenv("NTFY_CACHE_FILE","/var/lib/ntfy/cache.db")
 config["attachment_cache_dir"] = os.getenv("NTFY_ATTACHMENT_CACHE_DIR","/var/lib/ntfy/attachments")
 config["auth_file"] = os.getenv("NTFY_AUTH_FILE","/var/lib/ntfy/auth.db")
 config["web_push_file"] = os.getenv("NTFY_WEB_PUSH_FILE","/var/lib/ntfy/webpush.db")
-config["web_push_public_key"] = os.getenv("NTFY_WEB_PUSH_PUBLIC_KEY","")
-config["web_push_private_key"] = os.getenv("NTFY_WEB_PUSH_PRIVATE_KEY","")
+config["web_push_public_key"] = secrets_env.get("NTFY_WEB_PUSH_PUBLIC_KEY", "")
+config["web_push_private_key"] = secrets_env.get("NTFY_WEB_PUSH_PRIVATE_KEY", "")
 
 # Dump the configuration to stdout
 json.dump(config, fp=sys.stdout)
