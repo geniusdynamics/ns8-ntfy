@@ -1,0 +1,98 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    name: Static checks and unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check Python, JSON and shell syntax
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import ast
+          import json
+          from pathlib import Path
+
+          errors = []
+          ignored = {".git", ".devcontainer", "node_modules", "dist"}
+          for path in Path(".").rglob("*"):
+              if not path.is_file() or ignored.intersection(path.parts):
+                  continue
+              try:
+                  source = path.read_text(encoding="utf-8")
+              except UnicodeDecodeError:
+                  continue
+              first_line = source.partition("\n")[0]
+              if path.suffix == ".py" or (first_line.startswith("#!") and "python" in first_line):
+                  try:
+                      ast.parse(source, filename=str(path))
+                  except SyntaxError as exc:
+                      errors.append(f"{path}: {exc}")
+              if path.suffix == ".json":
+                  try:
+                      json.loads(source)
+                  except json.JSONDecodeError as exc:
+                      errors.append(f"{path}: {exc}")
+          if errors:
+              print("\n".join(errors))
+              raise SystemExit(1)
+          PY
+          while IFS= read -r -d '' file; do
+            if head -n 1 "$file" | grep -Eq '^#!.*(bash|/sh)([[:space:]]|$)'; then
+              bash -n "$file"
+            fi
+          done < <(find . -type f -not -path './.git/*' -not -path './ui/node_modules/*' -print0)
+
+      - name: Install PyYAML, provided by the NS8 agent
+        run: python3 -m pip install --user --break-system-packages PyYAML
+
+      - name: Run the Python unit tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+
+  ui:
+    name: UI lint and tests
+    runs-on: ubuntu-latest
+    env:
+      # renovate: datasource=npm packageName=corepack
+      COREPACK_VERSION: 0.36.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Enable Corepack
+        run: npm install -g corepack@${COREPACK_VERSION} && corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+          cache: "yarn"
+          cache-dependency-path: "ui/yarn.lock"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+        working-directory: ./ui
+
+      - name: Lint
+        run: yarn lint --no-fix
+        working-directory: ./ui
+
+      - name: Test browser-side YAML validation
+        run: yarn test
+        working-directory: ./ui
