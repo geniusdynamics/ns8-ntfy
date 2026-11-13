@@ -61,11 +61,41 @@
                 $t("settings.enabled")
               }}</template>
             </cv-toggle>
-              <!-- advanced options -->
+            <cv-toggle
+              value="iosPush"
+              :label="$t('settings.ios_push')"
+              v-model="iosPush"
+              :disabled="loading.getConfiguration || loading.configureModule"
+              class="mg-bottom"
+            >
+              <template slot="text-left">{{
+                $t("settings.disabled")
+              }}</template>
+              <template slot="text-right">{{
+                $t("settings.enabled")
+              }}</template>
+            </cv-toggle>
+            <p class="mg-bottom">{{ $t("settings.ios_push_help") }}</p>
+            <!-- advanced options -->
             <cv-accordion ref="accordion" class="maxwidth mg-bottom">
-              <cv-accordion-item :open="toggleAccordion[0]">
+              <cv-accordion-item
+                :key="advancedAccordionKey"
+                :open="isAdvancedOpen"
+              >
                 <template slot="title">{{ $t("settings.advanced") }}</template>
                 <template slot="content">
+                  <cv-text-area
+                    v-model="serverConfig"
+                    :label="$t('settings.server_config')"
+                    :helper-text="$t('settings.server_config_helper')"
+                    :invalid-message="error.server_config"
+                    :disabled="
+                      loading.getConfiguration || loading.configureModule
+                    "
+                    rows="18"
+                    ref="server_config"
+                    class="server-config"
+                  />
                 </template>
               </cv-accordion-item>
             </cv-accordion>
@@ -95,6 +125,8 @@
 
 <script>
 import to from "await-to-js";
+import { validateServerConfig } from "../configValidation.mjs";
+import configPolicy from "../../../imageroot/pypkg/ntfy_config_policy.json";
 import { mapState } from "vuex";
 import {
   QueryParamService,
@@ -125,6 +157,10 @@ export default {
       host: "",
       isLetsEncryptEnabled: false,
       isHttpToHttpsEnabled: true,
+      serverConfig: "",
+      iosPush: false,
+      isAdvancedOpen: false,
+      advancedAccordionKey: 0,
       loading: {
         getConfiguration: false,
         configureModule: false,
@@ -135,11 +171,28 @@ export default {
         host: "",
         lets_encrypt: "",
         http2https: "",
+        server_config: "",
       },
     };
   },
   computed: {
     ...mapState(["instanceName", "core", "appName"]),
+  },
+  watch: {
+    host(newHost, oldHost) {
+      const oldUrl = `https://${oldHost}`;
+      const newUrl = `https://${newHost}`;
+      const replacements = new Map([
+        [`base-url: "${oldUrl}"`, `base-url: "${newUrl}"`],
+        [`base-url: '${oldUrl}'`, `base-url: '${newUrl}'`],
+        [`base-url: ${oldUrl}`, `base-url: ${newUrl}`],
+      ]);
+
+      this.serverConfig = this.serverConfig
+        .split("\n")
+        .map((line) => replacements.get(line) || line)
+        .join("\n");
+    },
   },
   created() {
     this.getConfiguration();
@@ -202,6 +255,8 @@ export default {
       this.host = config.host;
       this.isLetsEncryptEnabled = config.lets_encrypt;
       this.isHttpToHttpsEnabled = config.http2https;
+      this.serverConfig = config.server_config;
+      this.iosPush = config.ios_push;
 
       this.loading.getConfiguration = false;
       this.focusElement("host");
@@ -218,6 +273,13 @@ export default {
         }
         isValidationOk = false;
       }
+      if (!validateServerConfig(this.serverConfig, configPolicy)) {
+        this.error.server_config = this.$t("settings.invalid_server_config");
+        this.isAdvancedOpen = true;
+        this.advancedAccordionKey += 1;
+        this.$nextTick(() => this.focusElement("server_config"));
+        isValidationOk = false;
+      }
       return isValidationOk;
     },
     configureModuleValidationFailed(validationErrors) {
@@ -229,15 +291,20 @@ export default {
         // set i18n error message
         this.error[param] = this.$t("settings." + validationError.error);
 
+        if (param === "server_config") {
+          // Carbon keeps its own open state after a manual close. Remount the
+          // item on every YAML error so repeated failures reveal the editor.
+          this.isAdvancedOpen = true;
+          this.advancedAccordionKey += 1;
+        }
+
         if (!focusAlreadySet) {
-          this.focusElement(param);
+          this.$nextTick(() => this.focusElement(param));
           focusAlreadySet = true;
         }
       }
     },
     async configureModule() {
-      this.error.test_imap = false;
-      this.error.test_smtp = false;
       const isValidationOk = this.validateConfigureModule();
       if (!isValidationOk) {
         return;
@@ -271,6 +338,8 @@ export default {
             host: this.host,
             lets_encrypt: this.isLetsEncryptEnabled,
             http2https: this.isHttpToHttpsEnabled,
+            server_config: this.serverConfig,
+            ios_push: this.iosPush,
           },
           extra: {
             title: this.$t("settings.instance_configuration", {
@@ -313,5 +382,15 @@ export default {
 
 .maxwidth {
   max-width: 38rem;
+}
+
+.server-config {
+  width: 100%;
+}
+
+.server-config ::v-deep textarea {
+  min-height: 24rem;
+  font-family: "IBM Plex Mono", monospace;
+  white-space: pre;
 }
 </style>

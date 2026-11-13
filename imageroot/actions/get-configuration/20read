@@ -2,45 +2,34 @@
 
 #
 # Copyright (C) 2022 Nethesis S.r.l.
+# Copyright (C) 2026 Genius Dynamics
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
 #
-# Read configuration
+# Read configuration. Secrets (passwords.env, and secret or module-managed
+# options of server.yml) are never returned: task results are stored in
+# Redis and shown to every NS8 administrator.
 #
 
+import json
 import os
 import sys
-import json
-import agent
 
-# Prepare return variable
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "pypkg"))
+import ntfy_config
+
 config = {}
-
-# Secrets are in passwords.env (see configure-module)
-try:
-    secrets_env = agent.read_envfile("passwords.env")
-except FileNotFoundError:
-    secrets_env = {}
-
-# Read current configuration from the environment file
-config["host"] = os.getenv("TRAEFIK_HOST","")
+config["host"] = os.getenv("TRAEFIK_HOST", "")
 config["http2https"] = os.getenv("TRAEFIK_HTTP2HTTPS") == "True"
 config["lets_encrypt"] = os.getenv("TRAEFIK_LETS_ENCRYPT") == "True"
-config["base_url"] = os.getenv("NTFY_BASE_URL","")
-config["auth_default_access"] = os.getenv("NTFY_AUTH_DEFAULT_ACCESS","read-write")
-config["behind_proxy"] = os.getenv("NTFY_BEHIND_PROXY", "true").lower() == "true"
-config["enable_login"] = os.getenv("NTFY_ENABLE_LOGIN", "false").lower() == "true"
-config["enable_signup"] = os.getenv("NTFY_ENABLE_SIGNUP", "false").lower() == "true"
-config["upstream_base_url"] = os.getenv("NTFY_UPSTREAM_BASE_URL","https://ntfy.sh")
-config["upstream_access_token"] = secrets_env.get("NTFY_UPSTREAM_ACCESS_TOKEN", "")
-config["web_push_email_address"] = os.getenv("NTFY_WEB_PUSH_EMAIL_ADDRESS","")
-config["cache_file"] = os.getenv("NTFY_CACHE_FILE","/var/lib/ntfy/cache.db")
-config["attachment_cache_dir"] = os.getenv("NTFY_ATTACHMENT_CACHE_DIR","/var/lib/ntfy/attachments")
-config["auth_file"] = os.getenv("NTFY_AUTH_FILE","/var/lib/ntfy/auth.db")
-config["web_push_file"] = os.getenv("NTFY_WEB_PUSH_FILE","/var/lib/ntfy/webpush.db")
-config["web_push_public_key"] = secrets_env.get("NTFY_WEB_PUSH_PUBLIC_KEY", "")
-config["web_push_private_key"] = secrets_env.get("NTFY_WEB_PUSH_PRIVATE_KEY", "")
+if os.path.exists(ntfy_config.CONFIG_PATH):
+    content = ntfy_config.read_server_config()
+else:
+    content = ntfy_config.default_config(config["host"])
 
-# Dump the configuration to stdout
+config["ios_push"] = bool(ntfy_config.parse_config(content).get("upstream-base-url"))
+config["auth_enabled"] = ntfy_config.auth_enabled(content)
+config["server_config"] = ntfy_config.editable_config(content)
+
 json.dump(config, fp=sys.stdout)

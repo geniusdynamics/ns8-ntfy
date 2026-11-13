@@ -7,4 +7,9 @@
 
 set -e
 
+# Redirect any output to the journal (stderr)
+exec 1>&2
+
+# Restart ntfy: ntfy-app.service runs discover-smarthost before it starts,
+# which writes the new smarthost settings to smarthost.env.
 systemctl --user try-reload-or-restart ntfy.service

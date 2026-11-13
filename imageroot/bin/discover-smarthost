@@ -2,35 +2,122 @@
 
 #
 # Copyright (C) 2023 Nethesis S.r.l.
+# Copyright (C) 2026 Genius Dynamics
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
+# Adapted from Platypuschan/ns8-ntfy-reworked (GPL-3.0).
+#
 
-import sys
-import agent
+#
+# Write state/smarthost.env (mode 0600) with the NTFY_SMTP_SENDER_* variables
+# for the NS8 smarthost. ntfy-app.service runs it before every start, and
+# the smarthost-changed event restarts the service.
+#
+
 import os
+import re
+import sys
+import tempfile
 
-# Connect the local Redis replica. This is necessary to consistently start
-# the service if the leader node is not reachable:
+import agent
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "pypkg"))
+import ntfy_config
+
+
+ENV_PATH = "smarthost.env"
+
+
+def write_env(values):
+    """Atomically write a private Podman environment file."""
+    directory = os.path.dirname(ENV_PATH) or "."
+    fd, temporary_path = tempfile.mkstemp(
+        dir=directory,
+        prefix=".smarthost.env.",
+        text=True,
+    )
+    try:
+        os.fchmod(fd, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as stream:
+            for key in sorted(values):
+                value = str(values[key])
+                if "\n" in value or "\r" in value:
+                    raise ValueError(f"invalid newline in {key}")
+                stream.write(f"{key}={value}\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary_path, ENV_PATH)
+    except Exception:
+        try:
+            os.unlink(temporary_path)
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def fallback_sender(username, host):
+    """Derive a usable sender address when server.yml does not define one."""
+    username = str(username).strip()
+    if re.fullmatch(r"[^@\s]+@[^@\s]+", username):
+        return username
+    host = str(host).strip()
+    return f"no-reply@{host}" if host else ""
+
+
+server_config = ntfy_config.read_server_config()
+
+# An SMTP relay defined in server.yml takes precedence over the NS8 smarthost:
+# injected NTFY_SMTP_* variables would otherwise override the file.
+if ntfy_config.root_scalar(server_config, "smtp-sender-addr"):
+    print(
+        "smtp-sender-addr is defined in server.yml; the NS8 smarthost is not used",
+        file=sys.stderr,
+    )
+    write_env({})
+    sys.exit(0)
+
 rdb = agent.redis_connect(use_replica=True)
-smtp_settings = agent.get_smarthost_settings(rdb)
+smtp = agent.get_smarthost_settings(rdb)
 
-envfile = "smarthost.env"
+if not smtp.get("enabled") or not smtp.get("host"):
+    write_env({})
+    sys.exit(0)
 
-# Using .tmp suffix: do not overwrite the target file until the new one is
-# saved to disk:
-with open(envfile + ".tmp", "w") as efp:
-    # HINT for kickstart: adjust variable names as needed
-    print(f"SMTP_ENABLED={'1' if smtp_settings['enabled'] else ''}", file=efp)
-    print(f"SMTP_HOST={smtp_settings['host']}", file=efp)
-    print(f"SMTP_PORT={smtp_settings['port']}", file=efp)
-    print(f"SMTP_USERNAME={smtp_settings['username']}", file=efp)
-    print(f"SMTP_PASSWORD={smtp_settings['password']}", file=efp)
-    print(f"SMTP_ENCRYPTION={smtp_settings['encrypt_smtp']}", file=efp)
-    print(f"SMTP_TLSVERIFY={'1' if smtp_settings['tls_verify'] else ''}", file=efp)
+# ntfy uses Go's net/smtp client. It supports plain SMTP and STARTTLS when the
+# server advertises it, but it cannot connect to implicit SMTPS (usually 465).
+if smtp.get("encrypt_smtp") == "tls":
+    print(
+        "<4>NS8 smarthost uses implicit TLS, which ntfy does not support; "
+        "automatic SMTP configuration was skipped",
+        file=sys.stderr,
+    )
+    write_env({})
+    sys.exit(0)
 
-# Commit changes by replacing the existing envfile:
-os.replace(envfile + ".tmp", envfile)
+if not smtp.get("tls_verify", True):
+    print(
+        "<4>NS8 smarthost disables TLS certificate verification, but ntfy "
+        "always verifies SMTP certificates",
+        file=sys.stderr,
+    )
 
-# NOTE: The generated envfile can be included in the service container
-#       with `podman run --env-file` or in Systemd unit with
-#       `Environment=-%S/state/smarthost.env`
+values = {
+    "NTFY_SMTP_SENDER_ADDR": f'{smtp["host"]}:{smtp.get("port") or 25}',
+}
+if smtp.get("username"):
+    values["NTFY_SMTP_SENDER_USER"] = smtp["username"]
+if smtp.get("password"):
+    values["NTFY_SMTP_SENDER_PASS"] = smtp["password"]
+
+# smtp-sender-from is not part of the NS8 smarthost object. Preserve an
+# explicit value in server.yml; otherwise prefer an email-shaped SMTP login
+# and finally fall back to the public ntfy host.
+if not ntfy_config.root_scalar(server_config, "smtp-sender-from"):
+    sender = fallback_sender(
+        smtp.get("username", ""),
+        os.getenv("TRAEFIK_HOST", ""),
+    )
+    if sender:
+        values["NTFY_SMTP_SENDER_FROM"] = sender
+
+write_env(values)
