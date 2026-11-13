@@ -1,7 +1,9 @@
 module.exports = {
   publicPath: "./",
   // added to fix the build of https://github.com/NethServer/ns8-kickstart/pull/114
-  transpileDependencies: ["axios"],
+  // yaml (browser-side server.yml validation) ships ES2020+ syntax that
+  // webpack 4 cannot parse
+  transpileDependencies: ["axios", "yaml"],
   configureWebpack: {
     optimization: {
       splitChunks: {
