@@ -5,11 +5,18 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-# If the control reaches this step, the service can be enabled and started
-
 set -e
 
 # Redirect any output to the journal (stderr)
 exec 1>&2
 
-systemctl --user try-restart ntfy.service
+# Load the unit files of the new release before restarting.
+systemctl --user daemon-reload
+
+# A configured instance has the service enabled. Start it even if it is not
+# running: 16data_volume stops it to move files, and the settings of older
+# releases could keep ntfy from starting until the start limit was hit.
+if systemctl --user is-enabled --quiet ntfy.service; then
+    systemctl --user reset-failed ntfy.service ntfy-app.service || :
+    systemctl --user restart ntfy.service
+fi
