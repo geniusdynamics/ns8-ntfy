@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "operation": {
+      "enum": [
+        "add-user",
+        "reset-password",
+        "remove-user",
+        "add-token",
+        "remove-token",
+        "set-access",
+        "remove-access"
+      ]
+    },
+    "username": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "role": {
+      "enum": [
+        "user",
+        "admin"
+      ]
+    },
+    "label": {
+      "type": "string",
+      "maxLength": 80
+    },
+    "expires": {
+      "enum": [
+        "1d",
+        "7d",
+        "30d",
+        "90d",
+        "365d",
+        "never"
+      ],
+      "default": "never"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "topic": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "permission": {
+      "enum": [
+        "read-write",
+        "read-only",
+        "write-only",
+        "deny"
+      ]
+    }
+  },
+  "required": [
+    "operation",
+    "username"
+  ]
+}
