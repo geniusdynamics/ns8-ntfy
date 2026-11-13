@@ -1,9 +1,12 @@
 {
   "name": "ntfy",
   "description": {
-    "en": "Your locally hosted one-stop-shop for all your PDF needs.."
+    "en": "ntfy sends push notifications to your phone or desktop from scripts and applications through simple HTTP requests.",
+    "it": "ntfy invia notifiche push al telefono o al desktop da script e applicazioni tramite semplici richieste HTTP."
   },
-  "categories": ["communication"],
+  "categories": [
+    "communication"
+  ],
   "authors": [
     {
       "name": "Martin Bhuong",
