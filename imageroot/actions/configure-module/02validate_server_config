@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2026 Nethesis S.r.l.
+# Copyright (C) 2026 Genius Dynamics
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Adapted from Platypuschan/ns8-ntfy-reworked (GPL-3.0).
+#
+
+import json
+import os
+import sys
+
+import agent
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "pypkg"))
+import ntfy_config
+
+agent.set_weight(os.path.basename(__file__), 0) # Validation step, no task progress at all
+
+data = json.load(sys.stdin)
+server_config = data.get("server_config")
+
+
+def fail(field, error, message):
+    # Never include YAML source lines or input values in task errors: they
+    # can contain credentials.
+    print(message, file=sys.stderr)
+    agent.set_status('validation-failed')
+    json.dump([{'field': field, 'parameter': field, 'value': '', 'error': error}], fp=sys.stdout)
+    sys.exit(3)
+
+
+# Reject a server.yml that ntfy cannot parse: the service would otherwise
+# start, exit immediately and restart in a loop after a successful task.
+if server_config is not None:
+    error = ntfy_config.validate_server_config(server_config)
+    if error:
+        fail('server_config', 'invalid_server_config', f"Invalid server_config: {error}")
+
+# Settings keys of releases up to 1.x are still accepted
+try:
+    ntfy_config.apply_legacy_options(server_config or "", data)
+except ValueError as error:
+    fail('server_config', 'invalid_server_config', f"Invalid legacy setting: {error}")
+
+# Fail before routing/service changes if an existing file is ambiguous.
+try:
+    ntfy_config.parse_config(ntfy_config.read_server_config())
+except ValueError:
+    fail('server_config', 'invalid_server_config',
+         "Existing server.yml is ambiguous or invalid; repair it on the NS8 node")

@@ -43,10 +43,15 @@ loadI18n();
 
 async function loadI18n() {
   const navigatorLang = navigator.language.substring(0, 2);
-  const messages = await loadLanguage(navigatorLang);
   Vue.use(VueI18n);
-  const i18n = new VueI18n();
-  i18n.setLocaleMessage(navigatorLang, messages.default);
+  // Load English as fallback for keys missing in partial translations
+  const i18n = new VueI18n({ fallbackLocale: "en", silentFallbackWarn: true });
+  const fallbackMessages = await loadLanguage("en");
+  i18n.setLocaleMessage("en", fallbackMessages.default);
+  if (navigatorLang !== "en") {
+    const messages = await loadLanguage(navigatorLang);
+    i18n.setLocaleMessage(navigatorLang, messages.default);
+  }
   i18n.locale = navigatorLang;
 
   new Vue({

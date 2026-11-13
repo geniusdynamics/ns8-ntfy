@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2026 Genius Dynamics
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Adapted from Platypuschan/ns8-ntfy-reworked (GPL-3.0).
+#
+
+#
+# NS8 restores the snapshot directory into the ntfy-app volume. Place its
+# contents at the normal ntfy paths before the restored service is
+# configured by 50traefik.
+#
+# Backups of releases up to 1.x have no snapshot: they hold the module
+# environment, with the NTFY_* settings (and, before 1.1, the secrets), and
+# passwords.env. Rebuild server.yml and passwords.env from them.
+#
+
+import json
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "pypkg"))
+import ntfy_backup
+import ntfy_config
+
+request = json.load(sys.stdin)
+renv = request.get('environment') or {}
+state_dir = os.environ["AGENT_STATE_DIR"]
+
+if not ntfy_backup.restore_snapshot(state_dir):
+    print("The backup has no ntfy data snapshot: restoring the settings of an older release", file=sys.stderr)
+    ntfy_config.migrate_legacy_environment(renv, renv.get("TRAEFIK_HOST", ""))
+
+# Secrets kept in the environment by releases before 1.1. A restored
+# passwords.env takes precedence.
+current = ntfy_config.read_secrets(state_dir)
+legacy = {key: renv[key] for key in ntfy_config.SECRET_INPUTS.values()
+          if key in renv and key not in current}
+ntfy_config.write_secrets(legacy, state_dir)

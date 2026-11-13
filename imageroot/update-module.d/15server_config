@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2026 Genius Dynamics
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+#
+# Releases up to 1.x kept the ntfy settings in NTFY_* variables of the
+# module environment. They are now kept in state/config/server.yml, which
+# the UI and configure-module edit. Write server.yml from those variables,
+# then remove them: ntfy gives environment variables precedence over
+# server.yml.
+#
+# A working instance keeps its effective settings. An instance whose
+# variables kept ntfy from starting (empty auth-default-access, "None"
+# booleans) gets the settings of a new installation.
+#
+# It runs on every update and does nothing once server.yml exists.
+#
+
+import os
+import sys
+
+import agent
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "pypkg"))
+import ntfy_config
+
+state_dir = os.environ["AGENT_STATE_DIR"]
+os.chdir(state_dir)
+try:
+    environment = agent.read_envfile("environment")
+except FileNotFoundError:
+    environment = {}
+
+host = environment.get("TRAEFIK_HOST", "")
+if host and ntfy_config.migrate_legacy_environment(environment, host):
+    print("Moved the NTFY_* settings to config/server.yml", file=sys.stderr)
+if os.path.exists(ntfy_config.CONFIG_PATH):
+    os.chmod(ntfy_config.CONFIG_DIRECTORY, 0o700)
+    os.chmod(ntfy_config.CONFIG_PATH, 0o600)
+ntfy_config.unset_legacy_environment(agent)

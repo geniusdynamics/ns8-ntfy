@@ -11,24 +11,32 @@ After=ntfy.service
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
 EnvironmentFile=%S/state/environment
-EnvironmentFile=-%S/state/smarthost.env
+# NTFY_* secrets, kept out of the module environment (mode 0600)
+EnvironmentFile=-%S/state/passwords.env
 WorkingDirectory=%S/state
 Restart=always
+RestartSec=10
 TimeoutStopSec=70
-ExecStartPre=/bin/mkdir -p config
+ExecStartPre=/bin/mkdir -p -m 0700 config
 ExecStartPre=/bin/rm -f %t/ntfy-app.pid %t/ntfy-app.ctr-id
 ExecStartPre=-runagent discover-smarthost
+ExecStartPre=/bin/sh -c 'umask 077 && touch smarthost.env'
+# ntfy data lives in the ntfy-app volume; config/server.yml is mounted
+# read-only. The state directory itself, which holds the agent credentials,
+# is not exposed to the container.
+# smarthost.env is read by Podman (not systemd) to pass the SMTP password
+# literally. NS8 reaches ntfy only through Traefik, on 127.0.0.1:TCP_PORT,
+# so the listen address and the proxy settings are enforced.
 ExecStart=/usr/bin/podman run --conmon-pidfile %t/ntfy-app.pid \
     --cidfile %t/ntfy-app.ctr-id --cgroups=no-conmon \
     --pod-id-file %t/ntfy.pod-id --replace -d --name  ntfy-app \
-    --volume ./:/var/lib/ntfy \
+    --volume ntfy-app:/var/lib/ntfy:Z \
+    --volume ./config:/etc/ntfy:ro,Z \
     --env=NTFY_* \
-    --env NTFY_SMTP_SENDER_ADDR=${SMTP_HOST} \
-    --env NTFY_SMTP_SERVER_LISTEN=${SMTP_PORT} \
-    --env NTFY_SMTP_SENDER_USER=${SMTP_USERNAME} \
-    --env NTFY_SMTP_SENDER_PASS=${SMTP_PASSWORD} \
-    --env NTFY_SMTP_SENDER_FROM=${SMTP_USERNAME} \
-    --env NTFY_SMTP_SERVER_DOMAIN=${SMTP_HOST} \
+    --env-file ./smarthost.env \
+    --env NTFY_LISTEN_HTTP=:80 \
+    --env NTFY_BEHIND_PROXY=true \
+    --env NTFY_PROXY_FORWARDED_HEADER=X-Forwarded-For \
     ${NTFY_IMAGE} serve
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/ntfy-app.ctr-id -t 10
 ExecReload=/usr/bin/podman kill -s HUP ntfy-app
