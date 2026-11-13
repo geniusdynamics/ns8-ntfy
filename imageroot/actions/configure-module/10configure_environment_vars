@@ -8,6 +8,33 @@
 import json
 import sys
 import agent
+import os
+
+
+def as_bool(value, default):
+    """ntfy parses booleans strictly: write true or false, never None"""
+    if value is None or value == "":
+        return default
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return "true" if str(value).lower() in ("1", "true", "yes", "on") else "false"
+
+# Secrets are kept in state/passwords.env (mode 0600), never in the module
+# environment: agent.set_env() copies it to Redis, readable by every module
+# of the node.
+def write_secrets(values):
+    path = os.path.join(os.environ["AGENT_STATE_DIR"], "passwords.env")
+    try:
+        current = agent.read_envfile(path)
+    except FileNotFoundError:
+        current = {}
+    current.update({key: ("" if value is None else value) for key, value in values.items()})
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as fp:
+        for key in sorted(current):
+            fp.write(f"{key}={current[key]}\n")
+    for key in values:
+        agent.unset_env(key)
 
 # Try to parse the stdin as JSON.
 # If parsing fails, output everything to stderr
@@ -19,18 +46,20 @@ base_url = "https://"+host
 
 agent.set_env("NTFY_BASE_URL", data.get("base_url",""))
 agent.set_env("NTFY_AUTH_DEFAULT_ACCESS", data.get("auth_default_access",""))
-agent.set_env("NTFY_BEHIND_PROXY",data.get("behind_proxy"))
-agent.set_env("NTFY_ENABLE_LOGIN", data.get("enable_login"))
-agent.set_env("NTFY_ENABLE_SIGNUP", data.get("enable_signup"))
-agent.set_env("NTFY_UPSTREAM_BASE_URE", data.get("upstream_base_url"))
-agent.set_env("NTFY_UPSTREAM_ACCESS_TOKEN", data.get("upstream_access_token"))
-agent.set_env("NTFY_WEB_PUSH_EMAIL_ADDRESS",data.get("web_push_email_address"))
-agent.set_env("NTFY_CACHE_FILE",data.get("cache_file"))
-agent.set_env("NTFY_ATTACHMENT_CACHE_DIR",data.get("attachment_cache_dir"))
-agent.set_env("NTFY_AUTH_FILE",data.get("auth_file"))
-agent.set_env("NTFY_WEB_PUSH_FILE",data.get("web_push_file"))
-agent.set_env("NTFY_WEB_PUSH_PUBLIC_KEY",data.get("web_push_public_key"))
-agent.set_env("NTFY_WEB_PUSH_PRIVATE_KEY",data.get("web_push_private_key"))
+agent.set_env("NTFY_BEHIND_PROXY", as_bool(data.get("behind_proxy"), "true"))
+agent.set_env("NTFY_ENABLE_LOGIN", as_bool(data.get("enable_login"), "false"))
+agent.set_env("NTFY_ENABLE_SIGNUP", as_bool(data.get("enable_signup"), "false"))
+agent.set_env("NTFY_UPSTREAM_BASE_URE", data.get("upstream_base_url") or "")
+agent.set_env("NTFY_WEB_PUSH_EMAIL_ADDRESS", data.get("web_push_email_address") or "")
+agent.set_env("NTFY_CACHE_FILE", data.get("cache_file") or "")
+agent.set_env("NTFY_ATTACHMENT_CACHE_DIR", data.get("attachment_cache_dir") or "")
+agent.set_env("NTFY_AUTH_FILE", data.get("auth_file") or "")
+agent.set_env("NTFY_WEB_PUSH_FILE", data.get("web_push_file") or "")
+write_secrets({
+    "NTFY_UPSTREAM_ACCESS_TOKEN": data.get("upstream_access_token"),
+    "NTFY_WEB_PUSH_PUBLIC_KEY": data.get("web_push_public_key"),
+    "NTFY_WEB_PUSH_PRIVATE_KEY": data.get("web_push_private_key"),
+})
 
 
 # Make sure everything is saved inside the environment file
